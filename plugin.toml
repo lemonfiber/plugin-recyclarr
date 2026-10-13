@@ -26,3 +26,17 @@ replaces    = "recyclarr"
 
 [service.env]
 CRON_SCHEDULE = { setting = "recyclarr:cron", default = "@daily" }
+
+[[proof]]
+id      = "recyclarr.version"
+title   = "Recyclarr's own program says which release it is"
+run     = { args = ["--version"] }
+expect  = { exit = 0, stdout_starts_with = "v8.7.3 (" }
+fixture = "recordings/recyclarr/version.json"
+why     = """
+Recyclarr answers nothing over a port: it runs its sync on its own schedule
+and writes quality profiles into the curators it is pointed at. The one
+thing it can be asked is its own program. Run with `--version`, it names the
+release it was built from, which says the pinned image is Recyclarr at the
+release this manifest names.
+"""

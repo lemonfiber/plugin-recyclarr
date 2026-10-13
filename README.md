@@ -20,6 +20,7 @@ its pin moves by a reviewed pull request on the catalogue.
 | --- | --- |
 | `plugin.toml` | The part's manifest |
 | `config/recyclarr/` | The files Recyclarr starts with, written into its configuration directory |
+| `recordings/recyclarr/` | What its proof's run wrote, which the proof is judged against |
 | `targets.toml` | The lemonfiber its checks run against |
 | `proofs.json` | What those checks said, committed |
 
