@@ -25,7 +25,19 @@ user_mode   = "uid"
 replaces    = "recyclarr"
 
 [service.env]
-CRON_SCHEDULE = { setting = "recyclarr:cron", default = "@daily" }
+CRON_SCHEDULE  = { setting = "recyclarr:cron", default = "@daily" }
+SONARR_API_KEY = { secret = "tv-key" }
+RADARR_API_KEY = { secret = "movies-key" }
+
+[[secret]]
+id  = "tv-key"
+of  = "sonarr"
+why = "Write the television curator's quality profiles"
+
+[[secret]]
+id  = "movies-key"
+of  = "radarr"
+why = "Write the film curator's quality profiles"
 
 [[proof]]
 id      = "recyclarr.version"
