@@ -54,6 +54,11 @@ release it was built from, which says the pinned image is Recyclarr at the
 release this manifest names.
 """
 
+
+[[ask]]
+capability = "library.curate"
+each       = true
+
 [[claim]]
 capability = "quality.sync"
 
