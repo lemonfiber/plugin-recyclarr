@@ -23,6 +23,7 @@ reaches     = "the community quality-guide repository"
 asks_for    = "Syncs the quality profiles on its own schedule — its own errand, not one anything else here sets off."
 user_mode   = "uid"
 replaces    = "recyclarr"
+provides    = ["quality.sync"]
 
 [service.env]
 CRON_SCHEDULE  = { setting = "recyclarr:cron", default = "@daily" }
@@ -52,3 +53,17 @@ thing it can be asked is its own program. Run with `--version`, it names the
 release it was built from, which says the pinned image is Recyclarr at the
 release this manifest names.
 """
+
+
+[[ask]]
+capability = "library.curate"
+each       = true
+
+[[claim]]
+capability = "quality.sync"
+
+[[claim.probe]]
+id      = "runs"
+run     = { args = ["--version"] }
+expect  = { exit = 0, stdout_starts_with = "v8.7.3 (" }
+fixture = "recordings/recyclarr/quality-sync-runs.json"
