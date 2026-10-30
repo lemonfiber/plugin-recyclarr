@@ -182,10 +182,10 @@ sonarr: # primary television instance
 
 #[test]
 fn a_curator_is_pointed_at_its_address_and_its_secret_and_nothing_else_moves() {
-    let pointed = pointed(SHIPPED, Kind::Movies, "http://films:7000", "radarr_api_key");
+    let pointed = pointed(SHIPPED, Kind::Movies, "http://films:7000", "films_api_key");
 
     assert!(
-        pointed.contains("    base_url: http://films:7000\n    api_key: !secret radarr_api_key\n")
+        pointed.contains("    base_url: http://films:7000\n    api_key: !secret films_api_key\n")
     );
     let moved: Vec<(&str, &str)> = SHIPPED
         .lines()

@@ -17,9 +17,9 @@ path = "src/main.rs"
 hex = "0.4"
 sha2 = "0.11"
 async-trait = "0.1"
-lemonfiber-adapter-kit = { git = "https://github.com/lemonfiber/lemonfiber", rev = "ec332f86b6c4a0653264bb171c62f545db29c2e4" }
-lemonfiber-contract = { git = "https://github.com/lemonfiber/lemonfiber", rev = "ec332f86b6c4a0653264bb171c62f545db29c2e4" }
-lemonfiber-ports = { git = "https://github.com/lemonfiber/lemonfiber", rev = "ec332f86b6c4a0653264bb171c62f545db29c2e4" }
+lemonfiber-adapter-kit = { git = "https://github.com/lemonfiber/lemonfiber", rev = "eb0fa09ab41c727a908129c2c6edbc1b4e1cb17c" }
+lemonfiber-contract = { git = "https://github.com/lemonfiber/lemonfiber", rev = "eb0fa09ab41c727a908129c2c6edbc1b4e1cb17c" }
+lemonfiber-ports = { git = "https://github.com/lemonfiber/lemonfiber", rev = "eb0fa09ab41c727a908129c2c6edbc1b4e1cb17c" }
 reqwest = { version = "0.13", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -27,11 +27,11 @@ tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal
 
 [dev-dependencies]
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "json"] }
-lemonfiber-fixtures = { git = "https://github.com/lemonfiber/lemonfiber", rev = "ec332f86b6c4a0653264bb171c62f545db29c2e4" }
+lemonfiber-fixtures = { git = "https://github.com/lemonfiber/lemonfiber", rev = "eb0fa09ab41c727a908129c2c6edbc1b4e1cb17c" }
 tokio = { version = "1", features = ["test-util"] }
 tower = { version = "0.5", default-features = false, features = ["util"] }
 toml = "1.1"
-lemonfiber-plugin = { git = "https://github.com/lemonfiber/lemonfiber", rev = "ec332f86b6c4a0653264bb171c62f545db29c2e4" }
+lemonfiber-plugin = { git = "https://github.com/lemonfiber/lemonfiber", rev = "eb0fa09ab41c727a908129c2c6edbc1b4e1cb17c" }
 
 [lints.rust]
 unsafe_code = "forbid"

@@ -21,7 +21,7 @@ use async_trait::async_trait;
 use lemonfiber_adapter_kit::shared::{Shared, SharedName, Unshared};
 use lemonfiber_ports::media::preset::Preset;
 use lemonfiber_ports::media::Kind;
-use lemonfiber_ports::service::{Applied, Failure, Profiled, Syncing};
+use lemonfiber_ports::service::{Applied, Edited, Failure, Profiled, Reapplied, Syncing};
 use sha2::{Digest as _, Sha256};
 
 use self::guidance::{guidance, names, pointed, rewrite, section};
@@ -60,6 +60,18 @@ const LONGEST_KEY: usize = 128;
 
 /// The longest host a curator is reached on.
 const LONGEST_HOST: usize = 253;
+
+/// The largest configuration an edit carries, as the core reads one.
+const LARGEST_EDIT: usize = 64 * 1024;
+
+/// What `recyclarr.yml` holds.
+enum Held {
+    /// A configuration the adapter may rewrite: the one it wrote, the shipped one, or
+    /// one the core wrote.
+    Ours(String),
+    /// Someone's own, whole.
+    Theirs(String),
+}
 
 /// One Recyclarr, told what to hold each curator to through its configuration
 /// directory.
@@ -108,20 +120,59 @@ impl Recyclarr {
             .map_err(unshared)
     }
 
-    /// The configuration as the adapter may rewrite it: the one it last wrote, the one
-    /// the plugin ships where there is none, or one the core wrote; refused naming the
-    /// file where it is someone's own.
-    async fn configuration(&self) -> Result<String, Failure> {
+    /// What `recyclarr.yml` holds: the shipped file where there is none.
+    async fn held(&self) -> Result<Held, Failure> {
         let Some(held) = self.read(CONFIGURATION).await? else {
-            return Ok(SHIPPED.to_owned());
+            return Ok(Held::Ours(SHIPPED.to_owned()));
         };
         if let Some(rest) = ours(&held) {
-            return Ok(rest.to_owned());
+            return Ok(Held::Ours(rest.to_owned()));
         }
         if held == SHIPPED || core_wrote(&held) {
-            return Ok(held);
+            return Ok(Held::Ours(held));
         }
-        Err(customised())
+        Ok(Held::Theirs(held))
+    }
+
+    /// The configuration as the adapter may rewrite it; refused naming the file where it
+    /// is someone's own.
+    async fn configuration(&self) -> Result<String, Failure> {
+        match self.held().await? {
+            Held::Ours(configuration) => Ok(configuration),
+            Held::Theirs(_) => Err(customised()),
+        }
+    }
+
+    /// The presets last applied, or none where the file is not one the adapter can read,
+    /// for writing over a hand edit.
+    async fn presets_kept(&self) -> Result<BTreeMap<String, Preset>, Failure> {
+        Ok(self
+            .read(PRESETS)
+            .await?
+            .and_then(|text| serde_json::from_str(&text).ok())
+            .unwrap_or_default())
+    }
+
+    /// Write `profiled` over `base`, with every preset of `presets` kept, and answer the
+    /// configuration written.
+    async fn write(
+        &self,
+        base: &str,
+        profiled: &Profiled,
+        mut presets: BTreeMap<String, Preset>,
+    ) -> Result<String, Failure> {
+        let (written, named, key) = rewritten(base, profiled)?;
+        presets.insert(profiled.which.media_type().to_owned(), profiled.preset);
+        let secrets = self.secrets(&named, key).await?;
+        self.put(SECRETS, secrets, SECRET).await?;
+        self.put(
+            PRESETS,
+            serde_json::to_string(&presets).unwrap_or_default(),
+            READABLE,
+        )
+        .await?;
+        self.put(CONFIGURATION, written.clone(), READABLE).await?;
+        Ok(written)
     }
 
     /// The presets last applied, by media type; refused as customised where the file is
@@ -153,27 +204,9 @@ impl Recyclarr {
 #[async_trait]
 impl Syncing for Recyclarr {
     async fn apply(&self, profiled: &Profiled) -> Result<Applied, Failure> {
-        let base_url = address(&profiled.host, profiled.port)?;
-        let key = key(&profiled.api_key)?;
-        let named = format!("{}_api_key", section(profiled.which));
         let configuration = self.configuration().await?;
-        let mut presets = self.presets().await?;
-        let written = pointed(
-            &rewrite(&configuration, profiled.which, profiled.preset),
-            profiled.which,
-            &base_url,
-            &named,
-        );
-        presets.insert(profiled.which.media_type().to_owned(), profiled.preset);
-        let secrets = self.secrets(&named, key).await?;
-        self.put(SECRETS, secrets, SECRET).await?;
-        self.put(
-            PRESETS,
-            serde_json::to_string(&presets).unwrap_or_default(),
-            READABLE,
-        )
-        .await?;
-        self.put(CONFIGURATION, marked(&written), READABLE).await?;
+        let presets = self.presets().await?;
+        self.write(&configuration, profiled, presets).await?;
         Ok(Applied::OnRestart)
     }
 
@@ -188,6 +221,79 @@ impl Syncing for Recyclarr {
             Err(customised())
         }
     }
+
+    async fn edited(&self, profiled: &Profiled) -> Result<Option<Edited>, Failure> {
+        let presets = self.presets_kept().await?;
+        Ok(over(self.held().await?, profiled, &presets)?.1)
+    }
+
+    async fn reapply(&self, profiled: &Profiled) -> Result<Reapplied, Failure> {
+        let presets = self.presets_kept().await?;
+        let (base, replaced) = over(self.held().await?, profiled, &presets)?;
+        self.write(&base, profiled, presets).await?;
+        Ok(Reapplied {
+            replaced,
+            applied: Applied::OnRestart,
+        })
+    }
+}
+
+/// What putting `profiled` back over `held` starts from, and the hand edit it replaces
+/// beside what it writes, or none where the configuration is the adapter's own.
+fn over(
+    held: Held,
+    profiled: &Profiled,
+    presets: &BTreeMap<String, Preset>,
+) -> Result<(String, Option<Edited>), Failure> {
+    let on_disk = match held {
+        Held::Ours(configuration) => {
+            rewritten(&configuration, profiled)?;
+            return Ok((configuration, None));
+        }
+        Held::Theirs(on_disk) => on_disk,
+    };
+    if on_disk.len() > LARGEST_EDIT {
+        return Err(refused(&format!(
+            "{CONFIGURATION} is larger than the {LARGEST_EDIT} bytes an edit carries"
+        )));
+    }
+    let base = put_back(presets, profiled.which);
+    let (preset, _, _) = rewritten(&base, profiled)?;
+    Ok((
+        base,
+        Some(Edited {
+            path: CONFIGURATION.to_owned(),
+            on_disk,
+            preset,
+        }),
+    ))
+}
+
+/// `base` with the curator of `profiled` held to its preset, pointed at it and at its
+/// secret, marked as the adapter's: the configuration, the secret's name and the key.
+fn rewritten<'a>(base: &str, profiled: &'a Profiled) -> Result<(String, String, &'a str), Failure> {
+    let base_url = address(&profiled.host, profiled.port)?;
+    let key = key(&profiled.api_key)?;
+    let named = format!("{}_api_key", section(profiled.which));
+    let written = pointed(
+        &rewrite(base, profiled.which, profiled.preset),
+        profiled.which,
+        &base_url,
+        &named,
+    );
+    Ok((marked(&written), named, key))
+}
+
+/// The shipped configuration with every curator but `which` held to the preset kept for
+/// it: what putting the profiles back over a hand edit starts from.
+fn put_back(presets: &BTreeMap<String, Preset>, which: Kind) -> String {
+    presets
+        .iter()
+        .filter_map(|(media_type, preset)| Some((Kind::for_media_type(media_type)?, *preset)))
+        .filter(|(kind, _)| *kind != which)
+        .fold(SHIPPED.to_owned(), |configuration, (kind, preset)| {
+            rewrite(&configuration, kind, preset)
+        })
 }
 
 /// The address a curator on `host` and `port` is reached at, where the host is a plain
