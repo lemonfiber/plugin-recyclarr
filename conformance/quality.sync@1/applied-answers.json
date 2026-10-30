@@ -1,0 +1,10 @@
+{
+  "recorded_from": "ghcr.io/recyclarr/recyclarr@sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9",
+  "note": "The preset last applied to the curator, read from the record the adapter keeps beside recyclarr.yml, which still names that preset's guidance.",
+  "request": {"method": "POST", "path": "/lemonfiber/quality.sync/v1/applied", "accept": "application/json"},
+  "response": {
+    "status": 200,
+    "headers": {"content-type": "application/json"},
+    "json": "balanced"
+  }
+}

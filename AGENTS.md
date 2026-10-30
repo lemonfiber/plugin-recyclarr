@@ -15,8 +15,7 @@ speaks the `quality.sync@1` contract in front of Recyclarr, by rewriting the
 Rust crate at the root, built on `lemonfiber-adapter-kit` from the core at the
 commit `Cargo.toml` pins, into the image the `Dockerfile` builds. `release.yml`
 publishes that image from every commit on `main` and from the train's tag.
-`plugin.toml` runs Recyclarr alone, and its claim's recordings are Recyclarr's
-own answers. The
+`plugin.toml` runs Recyclarr and that adapter beside it. The
 [bundle contract](https://github.com/lemonfiber/spec/blob/main/20-architecture/contracts/bundle.md)
 says how the catalogue pins this repository and how lemonfiber carries it.
 
@@ -24,11 +23,19 @@ says how the catalogue pins this repository and how lemonfiber carries it.
 
 - **The plugin id is the service's id** (`ARCH-R266`). The container, the
   configuration directory, the settings and the journal keep their names.
-- **One service, speaking no contract**, while the bundle assembles it. It
-  declares `replaces` naming its own id, which is how it takes the id, the port
-  and the hostname the bundle reserves for it (`ARCH-R222`).
-- **Its claims' recordings sit under `recordings/recyclarr/`**, and its starting
+- **Two services: `recyclarr` and `recyclarr-adapter`.** `recyclarr` speaks no
+  contract and declares `replaces` naming its own id, which is how it takes the
+  id, the port and the hostname the bundle reserves for it (`ARCH-R222`).
+  `recyclarr-adapter` fronts it, speaks `quality.sync@1`, provides
+  `quality.sync` and shares Recyclarr's configuration directory at
+  `/recyclarr` (`ARCH-R339`).
+- **Its proofs' recordings sit under `recordings/recyclarr/`**, and its starting
   files, where it has any, under `config/recyclarr/` (`ARCH-R271`).
+- **`conformance/` holds one recording per case of `quality.sync@1`**, written
+  by `lemonfiber plugin record .` at the commit `targets.toml` names, the adapter
+  at the digest `plugin.toml` pins in front of Recyclarr at its pinned digest.
+  Re-record whenever the adapter's answers or Recyclarr's digest change.
+  `tests/conformance.rs` reads every recording with the core's own client.
 - **Every service declares `reaches` and `asks_for`** (`ARCH-R270`).
 - **No Python here.** The reader is spec's `first-party-plugin` workflow's.
 - **No `unwrap`, `expect`, `panic` or indexing** outside tests. The lints in
@@ -54,3 +61,5 @@ says how the catalogue pins this repository and how lemonfiber carries it.
 - **Moving Recyclarr's digest** means recording every response again against
   the new image in the same change, moving `RELEASE` and `DIGEST` in
   `src/adapter.rs` with it, and committing the `proofs.json` the checks write.
+  `tests/manifest.rs` fails while the adapter's `DIGEST` and the image the
+  manifest runs differ.
