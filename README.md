@@ -14,7 +14,8 @@ lemonfiber assembles Recyclarr into the stack it ships as a stack service.
 Recyclarr's image is its own. The adapter that speaks lemonfiber's
 `quality.sync@1` contract in front of it is built from this repository, and its
 image is published from every commit on `main` and from the release train's
-tag. The catalogue's pin moves by a reviewed pull request.
+tag. The manifest runs that adapter beside Recyclarr, sharing Recyclarr's configuration
+directory. The catalogue's pin moves by a reviewed pull request.
 
 ## What is here
 
@@ -25,6 +26,7 @@ tag. The catalogue's pin moves by a reviewed pull request.
 | `Dockerfile` | The adapter's image |
 | `config/recyclarr/` | The files Recyclarr starts with, written into its configuration directory |
 | `recordings/recyclarr/` | What its proof's run wrote, which the proof is judged against |
+| `conformance/` | One recording per case of `quality.sync@1`, answered by the adapter in front of the pinned Recyclarr |
 | `targets.toml` | The lemonfiber its checks run against |
 | `proofs.json` | What those checks said, committed |
 
@@ -33,7 +35,8 @@ tag. The catalogue's pin moves by a reviewed pull request.
 The plugin verdict is one job of spec's
 [`first-party-plugin`](https://github.com/lemonfiber/spec/blob/main/.github/workflows/first-party-plugin.yml)
 workflow: the manifest as the lemonfiber `targets.toml` names reads it, every
-claim against its recording, and every pinned digest. `rust.yml` holds the
+proof against its recording, every conformance recording, and every pinned
+digest. `rust.yml` holds the
 adapter to its format, lints, tests, every line covered and its dependency
 policy. This repository holds no Python of its own. `just ci` runs the gates
 that need nothing but this tree.

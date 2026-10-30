@@ -1,0 +1,6 @@
+{
+  "recorded_from": "ghcr.io/recyclarr/recyclarr@sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9",
+  "note": "The case's preset written into the curator's section of recyclarr.yml and its key into secrets.yml beside it; Recyclarr reads both only when it starts, so the adapter answers that the preset takes hold on restart.",
+  "request": {"method": "POST", "path": "/lemonfiber/quality.sync/v1/apply", "accept": "application/json"},
+  "response": {"status": 205}
+}
