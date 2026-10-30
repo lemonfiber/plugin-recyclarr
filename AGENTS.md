@@ -38,11 +38,17 @@ says how the catalogue pins this repository and how lemonfiber carries it.
   comment, every other section and every `- template:` entry stays as it was.
 - **A curator's key goes into `secrets.yml`, owner-only** (`0600`), and every
   file is reached through `lemonfiber_adapter_kit::shared`.
-- **A configuration changed by hand is never written over.** The first line of
-  one the adapter writes carries the digest of the rest. One whose digest no
-  longer holds, that is not the shipped file and not one the core wrote from
+- **A configuration changed by hand is never written over by `apply`.** The first
+  line of one the adapter writes carries the digest of the rest. One whose digest
+  no longer holds, that is not the shipped file and not one the core wrote from
   `src/recyclarr/lemonfiber-wrote.yml` for some pair of presets, is named in the
   refusal. A hand edit to `lemonfiber-presets.json` is refused the same way.
+- **Only `reapply` writes over a hand edit, and `edited` shows it first.** Both
+  answer the whole file on disk beside the whole file putting the profiles back
+  writes, named by its path in the configuration directory, each at most 64 KiB;
+  the core masks and compares them, so the adapter builds no diff. What is
+  written starts from the shipped file, with every other curator held to the
+  preset `lemonfiber-presets.json` last kept for it.
 - **The core's crates move with the train.** The `rev` in `Cargo.toml` is the
   core commit `targets.toml` names, the same for every `lemonfiber-*` crate.
 - **Moving Recyclarr's digest** means recording every response again against
