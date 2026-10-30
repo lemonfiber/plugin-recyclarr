@@ -1,0 +1,8 @@
+target
+.git
+.lemonfiber
+config
+!config/recyclarr/recyclarr.yml
+conformance
+recordings
+tests

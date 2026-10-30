@@ -9,9 +9,16 @@
 
 ## What this repo is
 
-A bundled part: Recyclarr, as the stack lemonfiber ships carries it. The
+Recyclarr as a first-party lemonfiber plugin: `plugin.toml` and the adapter that
+speaks the `quality.sync@1` contract in front of Recyclarr, by rewriting the
+`recyclarr.yml` it reads in its configuration directory. The adapter is the
+Rust crate at the root, built on `lemonfiber-adapter-kit` from the core at the
+commit `Cargo.toml` pins, into the image the `Dockerfile` builds. `release.yml`
+publishes that image from every commit on `main` and from the train's tag.
+`plugin.toml` runs Recyclarr alone, and its claim's recordings are Recyclarr's
+own answers. The
 [bundle contract](https://github.com/lemonfiber/spec/blob/main/20-architecture/contracts/bundle.md)
-says how the catalogue pins it and how lemonfiber carries it.
+says how the catalogue pins this repository and how lemonfiber carries it.
 
 ## The rules you cannot break
 
@@ -24,6 +31,20 @@ says how the catalogue pins it and how lemonfiber carries it.
   files, where it has any, under `config/recyclarr/` (`ARCH-R271`).
 - **Every service declares `reaches` and `asks_for`** (`ARCH-R270`).
 - **No Python here.** The reader is spec's `first-party-plugin` workflow's.
-- **The image is Recyclarr's own**, so this repository is never tagged. Moving
-  the digest means recording every response again against the new image in
-  the same change, and committing the `proofs.json` the checks write.
+- **No `unwrap`, `expect`, `panic` or indexing** outside tests. The lints in
+  `Cargo.toml` are the core's.
+- **A preset rewrites one curator's section and nothing else**: its `include:`
+  entry, its `base_url` and its `api_key`, which names a `!secret`. Every
+  comment, every other section and every `- template:` entry stays as it was.
+- **A curator's key goes into `secrets.yml`, owner-only** (`0600`), and every
+  file is reached through `lemonfiber_adapter_kit::shared`.
+- **A configuration changed by hand is never written over.** The first line of
+  one the adapter writes carries the digest of the rest. One whose digest no
+  longer holds, that is not the shipped file and not one the core wrote from
+  `src/recyclarr/lemonfiber-wrote.yml` for some pair of presets, is named in the
+  refusal. A hand edit to `lemonfiber-presets.json` is refused the same way.
+- **The core's crates move with the train.** The `rev` in `Cargo.toml` is the
+  core commit `targets.toml` names, the same for every `lemonfiber-*` crate.
+- **Moving Recyclarr's digest** means recording every response again against
+  the new image in the same change, moving `RELEASE` and `DIGEST` in
+  `src/adapter.rs` with it, and committing the `proofs.json` the checks write.
