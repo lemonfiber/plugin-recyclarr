@@ -62,4 +62,5 @@ release this manifest names.
 [[ask]]
 service    = "recyclarr"
 capability = "library.curate"
+native     = "servarr"
 each       = true
