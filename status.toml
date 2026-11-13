@@ -1,0 +1,10 @@
+# What this repository implements, one row per requirement (OPS-R74).
+#
+# `done` means the requirement is met in full by what is here, `partial` that this
+# repository holds its part and the rest lives elsewhere, `open` that nothing here
+# meets it yet. The release gate and the no-stubs gate read this file; a pull
+# request that changes whether a requirement is met changes its row.
+
+requirement = [
+  { id = "F14-R15", state = "partial", evidence = ["Cargo.toml::lemonfiber-adapter-kit", "Dockerfile", ".github/workflows/release.yml::adapter-release.yml"] },
+]
