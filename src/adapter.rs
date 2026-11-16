@@ -18,8 +18,7 @@ pub const UPSTREAM: &str = "Recyclarr";
 /// The Recyclarr release this adapter's recordings were taken from.
 pub const RELEASE: &str = "8.7.3";
 
-/// The digest of the image that release's recordings were taken from.
-pub const DIGEST: &str = "sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9";
+include!(concat!(env!("OUT_DIR"), "/fronted.rs"));
 
 /// What this adapter says it is: the contract it speaks and the release it supports.
 #[must_use]

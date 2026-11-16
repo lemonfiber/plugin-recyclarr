@@ -58,8 +58,7 @@ says how the catalogue pins this repository and how lemonfiber carries it.
   preset `lemonfiber-presets.json` last kept for it.
 - **The core's crates move with the train.** The `rev` in `Cargo.toml` is the
   core commit `targets.toml` names, the same for every `lemonfiber-*` crate.
-- **Moving Recyclarr's digest** means recording every response again against
-  the new image in the same change, moving `RELEASE` and `DIGEST` in
-  `src/adapter.rs` with it, and committing the `proofs.json` the checks write.
-  `tests/manifest.rs` fails while the adapter's `DIGEST` and the image the
-  manifest runs differ.
+- **Moving Recyclarr's digest** means recording every response again against the
+  new image in the same change, moving `RELEASE` in `src/adapter.rs` with it
+  (`build.rs` reads `DIGEST` from `plugin.toml`, the digest's one home), and
+  committing the `proofs.json` the checks write.
