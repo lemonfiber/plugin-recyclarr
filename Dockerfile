@@ -4,7 +4,7 @@
 FROM rust:1.99.1-alpine3.22@sha256:9a744dc47d1ac2a7d17fc3cedfc8b4928b1696dfcba3274ab25bfb40988a9ff0 AS build
 RUN apk add --no-cache musl-dev
 WORKDIR /src
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock build.rs plugin.toml ./
 COPY src ./src
 COPY config/recyclarr ./config/recyclarr
 RUN cargo build --release --locked --bin recyclarr-adapter \
